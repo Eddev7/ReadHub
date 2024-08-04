@@ -1,51 +1,38 @@
+//  Dependecies
 import express from 'express';
-import axios from 'axios';
-const pdf = require('pdf-parse');
+import mongoose, { mongo } from 'mongoose';
+import dotenv from 'dotenv';
 
-const app = new express();
+// Routes
+import homeRoutes from './src/routes/homeRoutes'
+import buscaRoutes from './src/routes/buscaRoutes'
 
-app.get('/', async (req, res) => {
+dotenv.config();
 
-  let antes = Date.now();
-
-  try {
-
-    const response = await axios({
-      method: 'get',
-      url: 'https://esaj.tjce.jus.br/cdje/downloadCaderno.do?dtDiario=27/06/2024&cdCaderno=2&tpDownload=D',
-      responseType: 'arraybuffer'
-    });
-
-    if (!response.data) {
-      throw new Error('PDF não encontrado ou inválido');
-    }
-
-    const pdfBuffer = Buffer.from(response.data);
-
-    const data = await pdf(pdfBuffer);
-
-    const dataArray = data.text.split("\n");
-
-    dataArray.forEach((linha, index) => {
-      
-    })
-
-    await res.send(dataArray);
+class App {
+  constructor() {
+    // Express
+    this.app = express();
+    this.middlewares();
+    this.routes();
     
-    let duracao = Date.now() - antes;
-    console.log((duracao / 1000));
-
-
-  } catch (error) {
-    console.error('Erro ao processar o PDF:', error);
-    res.status(500).send(`Erro ao processar o PDF: ${error.message}`); // Envia a mensagem de erro para o cliente
+    // Connection to BD
+    mongoose.connect(process.env.CONNECT)
+    .then(() => {
+      console.log("Conectado a base de dados.")
+      this.app.emit('pronto');
+    });
   }
-  
-});
 
-app.listen(4000, () => {
-  console.log("LINK:")
-  console.log('http://localhost:4000');
-});
+  middlewares() {
+    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(express.json());
+  }
 
+  routes() {
+    this.app.use('/', homeRoutes);
+    this.app.use('/busca', buscaRoutes)
+  } 
+}
 
+export default new App().app;
