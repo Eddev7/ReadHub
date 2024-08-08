@@ -15,6 +15,7 @@
     "sucrase": "^3.35.0"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.16.0",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
